@@ -1,0 +1,2995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuantumDB - Database Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
+    <style>
+        :root {
+            --primary: #2a2d3e;
+            --secondary: #1e2029;
+            --accent: #00c6ff;
+            --accent-dark: #0072ff;
+            --text: #ffffff;
+            --text-secondary: #a0a7c2;
+            --success: #00d68f;
+            --warning: #ffaa00;
+            --danger: #ff3d71;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 15px;
+        }
+        
+        /* Login Page Styles */
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            padding: 20px;
+        }
+        
+        .login-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 40px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .login-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .login-logo h1 {
+            font-weight: 700;
+            font-size: 28px;
+            background: linear-gradient(to right, var(--accent), var(--accent-dark));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-left: 10px;
+        }
+        
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(45deg);
+        }
+        
+        .logo-icon i {
+            transform: rotate(-45deg);
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .form-group {
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text);
+            font-size: 14px;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .login-btn {
+            background: linear-gradient(to right, var(--accent), var(--accent-dark));
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 198, 255, 0.4);
+        }
+        
+        .login-error {
+            color: var(--danger);
+            margin-top: 10px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        /* Dashboard Styles */
+        .dashboard-container {
+            display: none;
+            padding-bottom: 80px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            margin-bottom: 20px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo h1 {
+            font-weight: 700;
+            font-size: 22px;
+            background: linear-gradient(to right, var(--accent), var(--accent-dark));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-left: 10px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .menu-icon {
+            font-size: 24px;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(to right, var(--accent), var(--accent-dark));
+        }
+        
+        .card h3 {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .card .value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .card .trend {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .trend.up {
+            color: var(--success);
+        }
+        
+        .trend.down {
+            color: var(--danger);
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .btn {
+            background: linear-gradient(to right, var(--accent), var(--accent-dark));
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 198, 255, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(to right, var(--danger), #c2185b);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(to right, var(--warning), #ff6d00);
+        }
+        
+        .btn-success {
+            background: linear-gradient(to right, var(--success), #00a86b);
+        }
+        
+        .api-list, .database-list, .user-list {
+            list-style: none;
+        }
+        
+        .api-item, .database-item, .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .api-item:last-child, .database-item:last-child, .user-item:last-child {
+            border-bottom: none;
+        }
+        
+        .api-info, .database-info, .user-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .api-icon, .database-icon, .user-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 198, 255, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: var(--accent);
+        }
+        
+        .database-icon {
+            background: rgba(0, 214, 143, 0.2);
+            color: var(--success);
+        }
+        
+        .user-icon {
+            background: rgba(255, 170, 0, 0.2);
+            color: var(--warning);
+        }
+        
+        .api-name, .database-name, .user-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .api-details, .database-details, .user-details {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+        
+        .api-actions, .database-actions, .user-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .delete-btn {
+            background: rgba(255, 61, 113, 0.2);
+            color: var(--danger);
+        }
+        
+        .edit-btn {
+            background: rgba(255, 170, 0, 0.2);
+            color: var(--warning);
+        }
+        
+        .download-btn {
+            background: rgba(0, 198, 255, 0.2);
+            color: var(--accent);
+        }
+        
+        .block-btn {
+            background: rgba(255, 61, 113, 0.2);
+            color: var(--danger);
+        }
+        
+        .unblock-btn {
+            background: rgba(0, 214, 143, 0.2);
+            color: var(--success);
+        }
+        
+        .toggle-btn {
+            background: rgba(0, 214, 143, 0.2);
+            color: var(--success);
+        }
+        
+        .toggle-btn.inactive {
+            background: rgba(255, 61, 113, 0.2);
+            color: var(--danger);
+        }
+        
+        .status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status.active {
+            background: rgba(0, 214, 143, 0.2);
+            color: var(--success);
+        }
+        
+        .status.inactive {
+            background: rgba(255, 61, 113, 0.2);
+            color: var(--danger);
+        }
+        
+        .status.blocked {
+            background: rgba(255, 61, 113, 0.2);
+            color: var(--danger);
+        }
+        
+        .tab-container {
+            display: flex;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 15px;
+        }
+        
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            border-bottom: 2px solid var(--accent);
+            color: var(--accent);
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--secondary);
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 12px;
+            transition: color 0.3s;
+            cursor: pointer;
+        }
+        
+        .nav-item.active {
+            color: var(--accent);
+        }
+        
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .chart-container {
+            height: 200px;
+            margin-top: 15px;
+        }
+        
+        .floating-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(to right, var(--accent), var(--accent-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            z-index: 99;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 198, 255, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 198, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 198, 255, 0); }
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: var(--primary);
+            border-radius: 12px;
+            padding: 25px;
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .close-btn {
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn-group .btn {
+            flex: 1;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            background: var(--success);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            transform: translateX(150%);
+            transition: transform 0.3s;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.error {
+            background: var(--danger);
+        }
+        
+        .notification.warning {
+            background: var(--warning);
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100%;
+            background: var(--secondary);
+            z-index: 999;
+            transition: right 0.3s;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .sidebar.open {
+            right: 0;
+        }
+        
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        
+        .sidebar-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .sidebar-close {
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+        }
+        
+        .sidebar-menu li {
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: color 0.3s;
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-menu li i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar-menu li:hover {
+            color: var(--accent);
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+            display: none;
+        }
+        
+        .overlay.show {
+            display: block;
+        }
+        
+        .api-key {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            margin-top: 10px;
+            word-break: break-all;
+            font-size: 12px;
+        }
+        
+        .copy-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--text);
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 5px;
+            font-size: 12px;
+        }
+        
+        /* Page styles */
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .database-size {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .setting-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .setting-option:last-child {
+            border-bottom: none;
+        }
+        
+        .setting-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .setting-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .setting-description {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-top: 5px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.2);
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--accent);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        
+        .api-link {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            margin-top: 10px;
+            word-break: break-all;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .copy-link-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--text);
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .database-select {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .database-option {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .database-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .database-option.selected {
+            border-color: var(--accent);
+            background: rgba(0, 198, 255, 0.1);
+        }
+        
+        .database-option h4 {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .database-option p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .analytics-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .analytics-card h3 {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        
+        .analytics-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .logout-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 60vh;
+            text-align: center;
+        }
+        
+        .logout-icon {
+            font-size: 80px;
+            color: var(--accent);
+            margin-bottom: 20px;
+        }
+        
+        .logout-text {
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+        
+        .file-upload-info {
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(to right, var(--accent), var(--accent-dark));
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .user-status-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .toggle-indicator {
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+        
+        .toggle-indicator.active {
+            color: var(--success);
+        }
+        
+        .toggle-indicator.blocked {
+            color: var(--danger);
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div class="login-container" id="login-page">
+        <div class="login-box">
+            <div class="login-logo">
+                <div class="logo-icon">
+                    <i>Q</i>
+                </div>
+                <h1>QuantumDB</h1>
+            </div>
+            <form class="login-form" id="login-form">
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" class="form-control" placeholder="Enter your username" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="login-btn">Login</button>
+                <div class="login-error" id="login-error">Invalid username or password</div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="dashboard-container" id="dashboard-container">
+        <div class="container">
+            <header>
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i>Q</i>
+                    </div>
+                    <h1>QuantumDB</h1>
+                </div>
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar">A</div>
+                    <div class="menu-icon" id="menuBtn">
+                        <i class="fas fa-bars"></i>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- Dashboard Page -->
+            <div class="page active" id="dashboard-page">
+                <div class="dashboard">
+                    <div class="card">
+                        <h3>Total Storage</h3>
+                        <div class="value">10.0 TB</div>
+                        <div class="trend up">+2.5% from last month</div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Active Users</h3>
+                        <div class="value">2</div>
+                        <div class="trend up">+2 today</div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Total Users</h3>
+                        <div class="value">4</div>
+                        <div class="trend up">+2 this week</div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Database Count</h3>
+                        <div class="value">24</div>
+                        <div class="trend down">-2 this month</div>
+                    </div>
+                </div>
+                
+                <div class="main-content">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2 class="panel-title">API Management</h2>
+                            <button class="btn" id="createApiBtn">Create New API</button>
+                        </div>
+                        
+                        <div class="tab-container">
+                            <div class="tab active" data-tab="all">All APIs</div>
+                            <div class="tab" data-tab="active">Active</div>
+                            <div class="tab" data-tab="inactive">Inactive</div>
+                        </div>
+                        
+                        <div class="api-list" id="apiList">
+                            <!-- APIs will be dynamically added here -->
+                        </div>
+                    </div>
+                    
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2 class="panel-title">Storage Overview</h2>
+                            <button class="btn" id="refreshChartBtn">Refresh</button>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="storageChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h2 class="panel-title">Quick Actions</h2>
+                        </div>
+                        <div class="btn-group" style="flex-wrap: wrap;">
+                            <button class="btn" id="backupBtn"><i class="fas fa-save"></i> Backup Data</button>
+                            <button class="btn btn-warning" id="optimizeBtn"><i class="fas fa-broom"></i> Optimize DB</button>
+                            <button class="btn btn-danger" id="clearLogsBtn"><i class="fas fa-trash"></i> Clear Logs</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Databases Page -->
+            <div class="page" id="databases-page">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">All Databases</h2>
+                        <button class="btn" id="uploadDbBtn"><i class="fas fa-upload"></i> Upload Database</button>
+                    </div>
+                    
+                    <div class="database-list" id="databaseList">
+                        <!-- Databases will be dynamically added here -->
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Storage Distribution</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="databaseChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- API Management Page -->
+            <div class="page" id="api-management-page">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">API Management</h2>
+                        <button class="btn" id="createApiFromDbBtn">Create New API</button>
+                    </div>
+                    
+                    <div class="api-list" id="apiManagementList">
+                        <!-- APIs will be dynamically added here -->
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">API Usage Statistics</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="apiUsageChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- User Management Page -->
+            <div class="page" id="user-management-page">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">User Management</h2>
+                        <div class="btn-group">
+                            <button class="btn" id="addUserBtn"><i class="fas fa-user-plus"></i> Add User</button>
+                            <button class="btn btn-success" id="exportUsersBtn"><i class="fas fa-download"></i> Export Users</button>
+                        </div>
+                    </div>
+                    
+                    <div class="user-list" id="userList">
+                        <!-- Users will be dynamically added here -->
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">User Activity</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="userActivityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Analytics Page -->
+            <div class="page" id="analytics-page">
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h3>API Requests (Today)</h3>
+                        <div class="value">12,458</div>
+                        <div class="trend up">+15% from yesterday</div>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <h3>Data Transfer (Today)</h3>
+                        <div class="value">245 GB</div>
+                        <div class="trend up">+8% from yesterday</div>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <h3>Active Sessions</h3>
+                        <div class="value">342</div>
+                        <div class="trend down">-5% from yesterday</div>
+                    </div>
+                    
+                    <div class="analytics-card">
+                        <h3>Error Rate</h3>
+                        <div class="value">0.8%</div>
+                        <div class="trend down">-0.2% from yesterday</div>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Performance Metrics</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">API Usage Over Time</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="apiAnalyticsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Page -->
+            <div class="page" id="settings-page">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">General Settings</h2>
+                    </div>
+                    
+                    <div class="settings-list" id="settingsList">
+                        <!-- Settings will be dynamically added here -->
+                    </div>
+                </div>
+                
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">Account Settings</h2>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" class="form-control" value="admin">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" class="form-control" value="admin@quantumdb.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" class="form-control" value="********">
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button class="btn" id="saveSettingsBtn">Save Changes</button>
+                        <button class="btn btn-danger" id="resetSettingsBtn">Reset to Default</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Logout Page -->
+            <div class="page" id="logout-page">
+                <div class="logout-container">
+                    <div class="logout-icon">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                    <div class="logout-text">Are you sure you want to logout?</div>
+                    <div class="btn-group">
+                        <button class="btn btn-danger" id="confirmLogoutBtn">Yes, Logout</button>
+                        <button class="btn" id="cancelLogoutBtn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="floating-btn" id="quickActionBtn">
+            <i class="fas fa-bolt"></i>
+        </div>
+        
+        <div class="bottom-nav">
+            <div class="nav-item active" data-page="dashboard">
+                <div class="nav-icon">
+                    <i class="fas fa-home"></i>
+                </div>
+                <div>Home</div>
+            </div>
+            <div class="nav-item" data-page="databases">
+                <div class="nav-icon">
+                    <i class="fas fa-database"></i>
+                </div>
+                <div>Databases</div>
+            </div>
+            <div class="nav-item" data-page="api-management">
+                <div class="nav-icon">
+                    <i class="fas fa-code"></i>
+                </div>
+                <div>APIs</div>
+            </div>
+            <div class="nav-item" data-page="user-management">
+                <div class="nav-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div>Users</div>
+            </div>
+            <div class="nav-item" data-page="settings">
+                <div class="nav-icon">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <div>Settings</div>
+            </div>
+        </div>
+        
+        <!-- Create API Modal -->
+        <div class="modal" id="createApiModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Create New API</h2>
+                    <div class="close-btn" id="closeCreateModal">&times;</div>
+                </div>
+                <div class="form-group">
+                    <label for="apiName">API Name</label>
+                    <input type="text" id="apiName" class="form-control" placeholder="Enter API name">
+                </div>
+                <div class="form-group">
+                    <label for="apiEndpoint">API Endpoint</label>
+                    <input type="text" id="apiEndpoint" class="form-control" placeholder="/api/v1/endpoint">
+                </div>
+                <div class="form-group">
+                    <label for="apiDescription">Description</label>
+                    <textarea id="apiDescription" class="form-control" rows="3" placeholder="Describe what this API does"></textarea>
+                </div>
+                <div class="btn-group">
+                    <button class="btn" id="generateApiBtn">Generate API</button>
+                    <button class="btn btn-danger" id="cancelCreateBtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Create API from Database Modal -->
+        <div class="modal" id="createApiFromDbModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Create API from Database</h2>
+                    <div class="close-btn" id="closeCreateDbModal">&times;</div>
+                </div>
+                <div class="form-group">
+                    <label for="apiNameFromDb">API Name</label>
+                    <input type="text" id="apiNameFromDb" class="form-control" placeholder="Enter API name">
+                </div>
+                <div class="form-group">
+                    <label>Select Database</label>
+                    <div class="database-select" id="databaseSelect">
+                        <!-- Database options will be added here -->
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="apiEndpointFromDb">API Endpoint</label>
+                    <input type="text" id="apiEndpointFromDb" class="form-control" placeholder="/api/v1/endpoint">
+                </div>
+                <div class="btn-group">
+                    <button class="btn" id="generateApiFromDbBtn">Generate API</button>
+                    <button class="btn btn-danger" id="cancelCreateDbBtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Upload Database Modal -->
+        <div class="modal" id="uploadDbModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Upload Database</h2>
+                    <div class="close-btn" id="closeUploadModal">&times;</div>
+                </div>
+                <div class="form-group">
+                    <label for="dbName">Database Name</label>
+                    <input type="text" id="dbName" class="form-control" placeholder="Enter database name">
+                </div>
+                <div class="form-group">
+                    <label for="dbType">Database Type</label>
+                    <select id="dbType" class="form-control">
+                        <option value="mysql">MySQL</option>
+                        <option value="postgresql">PostgreSQL</option>
+                        <option value="mongodb">MongoDB</option>
+                        <option value="sqlite">SQLite</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="dbFile">Database File</label>
+                    <input type="file" id="dbFile" class="form-control">
+                    <div class="file-upload-info" id="fileUploadInfo">Select a database file to upload</div>
+                    <div class="progress-bar">
+                        <div class="progress" id="uploadProgress"></div>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn" id="uploadDbFileBtn">Upload Database</button>
+                    <button class="btn btn-danger" id="cancelUploadBtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add User Modal -->
+        <div class="modal" id="addUserModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Add New User</h2>
+                    <div class="close-btn" id="closeAddUserModal">&times;</div>
+                </div>
+                <div class="form-group">
+                    <label for="newUserName">Full Name</label>
+                    <input type="text" id="newUserName" class="form-control" placeholder="Enter user's full name">
+                </div>
+                <div class="form-group">
+                    <label for="newUserEmail">Email</label>
+                    <input type="email" id="newUserEmail" class="form-control" placeholder="Enter user's email">
+                </div>
+                <div class="form-group">
+                    <label for="newUserRole">Role</label>
+                    <select id="newUserRole" class="form-control">
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
+                        <option value="moderator">Moderator</option>
+                    </select>
+                </div>
+                <div class="btn-group">
+                    <button class="btn" id="saveUserBtn">Add User</button>
+                    <button class="btn btn-danger" id="cancelAddUserBtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Delete API Modal -->
+        <div class="modal" id="deleteApiModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Delete API</h2>
+                    <div class="close-btn" id="closeDeleteModal">&times;</div>
+                </div>
+                <p>Are you sure you want to delete <strong id="apiToDelete">Number To Info API</strong>? This action cannot be undone.</p>
+                <div class="btn-group">
+                    <button class="btn btn-danger" id="confirmDeleteBtn">Delete API</button>
+                    <button class="btn" id="cancelDeleteBtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Edit API Modal -->
+        <div class="modal" id="editApiModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Edit API</h2>
+                    <div class="close-btn" id="closeEditModal">&times;</div>
+                </div>
+                <div class="form-group">
+                    <label for="editApiName">API Name</label>
+                    <input type="text" id="editApiName" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="editApiEndpoint">API Endpoint</label>
+                    <input type="text" id="editApiEndpoint" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="editApiDescription">Description</label>
+                    <textarea id="editApiDescription" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="btn-group">
+                    <button class="btn" id="saveApiBtn">Save Changes</button>
+                    <button class="btn btn-danger" id="cancelEditBtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- API Details Modal -->
+        <div class="modal" id="apiDetailsModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="apiDetailsTitle">API Details</h2>
+                    <div class="close-btn" id="closeDetailsModal">&times;</div>
+                </div>
+                <div class="form-group">
+                    <label>API Key</label>
+                    <div class="api-key" id="apiKeyDisplay">qdb_7x9a2b8c1d5e3f6g4h0i</div>
+                    <button class="copy-btn" id="copyApiKeyBtn"><i class="fas fa-copy"></i> Copy API Key</button>
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <div class="status active" id="apiStatusDisplay">Active</div>
+                </div>
+                <div class="form-group">
+                    <label>Created</label>
+                    <div class="form-control" style="background: transparent; border: none; padding-left: 0;" id="apiCreatedDisplay">October 15, 2023</div>
+                </div>
+                <div class="form-group">
+                    <label>Last Used</label>
+                    <div class="form-control" style="background: transparent; border: none; padding-left: 0;" id="apiLastUsedDisplay">2 hours ago</div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn" id="regenerateApiKeyBtn">Regenerate Key</button>
+                    <button class="btn" id="closeDetailsBtn">Close</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Block User Modal -->
+        <div class="modal" id="blockUserModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Block User</h2>
+                    <div class="close-btn" id="closeBlockModal">&times;</div>
+                </div>
+                <p>Are you sure you want to block <strong id="userToBlock">John Doe</strong>? This will revoke their API access.</p>
+                <div class="btn-group">
+                    <button class="btn btn-danger" id="confirmBlockBtn">Block User</button>
+                    <button class="btn" id="cancelBlockBtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Unblock User Modal -->
+        <div class="modal" id="unblockUserModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Unblock User</h2>
+                    <div class="close-btn" id="closeUnblockModal">&times;</div>
+                </div>
+                <p>Are you sure you want to unblock <strong id="userToUnblock">John Doe</strong>? This will restore their API access.</p>
+                <div class="btn-group">
+                    <button class="btn btn-success" id="confirmUnblockBtn">Unblock User</button>
+                    <button class="btn" id="cancelUnblockBtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Delete User Modal -->
+        <div class="modal" id="deleteUserModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title">Delete User</h2>
+                    <div class="close-btn" id="closeDeleteUserModal">&times;</div>
+                </div>
+                <p>Are you sure you want to delete <strong id="userToDelete">John Doe</strong>? This action cannot be undone.</p>
+                <div class="btn-group">
+                    <button class="btn btn-danger" id="confirmDeleteUserBtn">Delete User</button>
+                    <button class="btn" id="cancelDeleteUserBtn">Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Notification -->
+        <div class="notification" id="notification"></div>
+        
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2 class="sidebar-title">Menu</h2>
+                <div class="sidebar-close" id="sidebarClose">&times;</div>
+            </div>
+            <ul class="sidebar-menu">
+                <li data-page="dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</li>
+                <li data-page="databases"><i class="fas fa-database"></i> Databases</li>
+                <li data-page="api-management"><i class="fas fa-code"></i> API Management</li>
+                <li data-page="user-management"><i class="fas fa-users"></i> User Management</li>
+                <li data-page="analytics"><i class="fas fa-chart-bar"></i> Analytics</li>
+                <li data-page="settings"><i class="fas fa-cog"></i> Settings</li>
+                <li data-page="logout"><i class="fas fa-sign-out-alt"></i> Logout</li>
+            </ul>
+        </div>
+        
+        <!-- Overlay -->
+        <div class="overlay" id="overlay"></div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAKm1V5k8GiyXMviVEBv4YUnT04m2DAO_0",
+            authDomain: "snaphat-b7cca.firebaseapp.com",
+            projectId: "snaphat-b7cca",
+            storageBucket: "snaphat-b7cca.firebasestorage.app",
+            messagingSenderId: "550556404003",
+            appId: "1:550556404003:web:4f3264f62a29dfbc162496",
+            measurementId: "G-WMDDTN4S2K"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // Sample API data
+        let apis = [
+            {
+                id: 1,
+                name: "Number To Info API",
+                endpoint: "/api/v1/customers",
+                description: "Access customer information and profiles",
+                status: "active",
+                created: "September 1, 2025",
+                lastUsed: " 1 Month ago",
+                key: "qdb_7x9a2b8c1d5e3f6g4h0i",
+                database: "Customer Database"
+            }
+        ];
+        
+        // Sample database data
+        let databases = [
+            {
+                id: 1,
+                name: "Number To Info",
+                size: "150 GB",
+                type: "MySQL",
+                status: "active",
+                uploadDate: "September 1, 2025",
+                fileUrl: ""
+            }
+        ];
+        
+        // Sample user data
+        let users = [
+            {
+                id: 1,
+                name: "sonu",
+                email: "suno7623@gmail.com",
+                status: "active",
+                joinDate: "Oct 3, 2025",
+                lastActive: "2 hours ago",
+                apiUsage: "Number To Info API",
+                role: "user"
+            },
+            {
+                id: 2,
+                name: "raju kumar",
+                email: "raju87278@gmail.com",
+                status: "active",
+                joinDate: "October 1, 2025",
+                lastActive: "5 minutes ago",
+                apiUsage: "Number To Info API",
+                role: "admin"
+            },
+            {
+                id: 3,
+                name: "Robert",
+                email: "robert6544@gmail.com.com",
+                status: "blocked",
+                joinDate: "August 20, 2025",
+                lastActive: "3 days ago",
+                apiUsage: "Number To Info API",
+                role: "user"
+            },
+            {
+                id: 4,
+                name: "Vishal Gupta",
+                email: "vishal562785@gmail.com",
+                status: "active",
+                joinDate: "October 10, 2025",
+                lastActive: "1 hour ago",
+                apiUsage: "Number To Info API",
+                role: "moderator"
+            }
+        ];
+        
+        // Sample settings data
+        let settings = [
+            {
+                id: 1,
+                name: "Auto Backup",
+                description: "Automatically backup databases daily",
+                enabled: true
+            },
+            {
+                id: 2,
+                name: "Email Notifications",
+                description: "Receive email alerts for system events",
+                enabled: true
+            },
+            {
+                id: 3,
+                name: "Two-Factor Authentication",
+                description: "Require 2FA for admin access",
+                enabled: false
+            },
+            {
+                id: 4,
+                name: "API Rate Limiting",
+                description: "Limit API requests per user",
+                enabled: true
+            },
+            {
+                id: 5,
+                name: "Dark Mode",
+                description: "Use dark theme across the application",
+                enabled: true
+            }
+        ];
+        
+        // Initialize storage chart
+        const ctx = document.getElementById('storageChart').getContext('2d');
+        let storageChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Customer Data', 'Analytics', 'Backups', 'Logs', 'Free Space'],
+                datasets: [{
+                    data: [24, 18, 42, 8.5, 7.5],
+                    backgroundColor: [
+                        '#00c6ff',
+                        '#0072ff',
+                        '#00d68f',
+                        '#ffaa00',
+                        '#2a2d3e'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 15
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#ffffff',
+                            font: {
+                                size: 12
+                            },
+                            padding: 20
+                        }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+        
+        // Initialize database chart
+        const dbCtx = document.getElementById('databaseChart').getContext('2d');
+        let databaseChart = new Chart(dbCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Customer DB', 'Analytics DB', 'Logs DB', 'Backup DB', 'Number To Info DB'],
+                datasets: [{
+                    label: 'Storage (GB)',
+                    data: [150, 320, 85, 420, 65],
+                    backgroundColor: [
+                        '#00c6ff',
+                        '#0072ff',
+                        '#00d68f',
+                        '#ffaa00',
+                        '#ff3d71'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Initialize API usage chart
+        const apiCtx = document.getElementById('apiUsageChart').getContext('2d');
+        let apiUsageChart = new Chart(apiCtx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'API Requests',
+                    data: [1200, 1900, 1500, 2200, 1800, 1000, 1400],
+                    borderColor: '#00c6ff',
+                    backgroundColor: 'rgba(0, 198, 255, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Initialize user activity chart
+        const userCtx = document.getElementById('userActivityChart').getContext('2d');
+        let userActivityChart = new Chart(userCtx, {
+            type: 'bar',
+            data: {
+                labels: ['John singh', 'Raj', 'Robert Johnson', 'Boss'],
+                datasets: [{
+                    label: 'API Calls (Last 7 days)',
+                    data: [2450, 1870, 320, 1560],
+                    backgroundColor: '#00c6ff',
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Initialize performance chart
+        const perfCtx = document.getElementById('performanceChart').getContext('2d');
+        let performanceChart = new Chart(perfCtx, {
+            type: 'line',
+            data: {
+                labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                datasets: [{
+                    label: 'Response Time (ms)',
+                    data: [45, 52, 38, 65, 42, 48],
+                    borderColor: '#00c6ff',
+                    backgroundColor: 'rgba(0, 198, 255, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Initialize API analytics chart
+        const apiAnalyticsCtx = document.getElementById('apiAnalyticsChart').getContext('2d');
+        let apiAnalyticsChart = new Chart(apiAnalyticsCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Number To Info API',],
+                datasets: [{
+                    label: 'Requests (Last 30 days)',
+                    data: [12500, 8700, 4200],
+                    backgroundColor: [
+                        '#00c6ff',
+                        '#0072ff',
+                        '#ffaa00'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#ffffff'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // DOM Elements
+        const loginPage = document.getElementById('login-page');
+        const dashboardContainer = document.getElementById('dashboard-container');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const userAvatar = document.getElementById('user-avatar');
+        
+        const createApiModal = document.getElementById('createApiModal');
+        const createApiFromDbModal = document.getElementById('createApiFromDbModal');
+        const uploadDbModal = document.getElementById('uploadDbModal');
+        const addUserModal = document.getElementById('addUserModal');
+        const deleteApiModal = document.getElementById('deleteApiModal');
+        const editApiModal = document.getElementById('editApiModal');
+        const apiDetailsModal = document.getElementById('apiDetailsModal');
+        const blockUserModal = document.getElementById('blockUserModal');
+        const unblockUserModal = document.getElementById('unblockUserModal');
+        const deleteUserModal = document.getElementById('deleteUserModal');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        const notification = document.getElementById('notification');
+        
+        // Current user
+        let currentUser = null;
+
+        // Initialize the app
+        function initApp() {
+            // Check if user is already logged in
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    // User is signed in
+                    currentUser = user;
+                    showDashboard();
+                } else {
+                    // User is signed out
+                    showLogin();
+                }
+            });
+            
+            setupEventListeners();
+        }
+        
+        // Show login page
+        function showLogin() {
+            loginPage.style.display = 'flex';
+            dashboardContainer.style.display = 'none';
+        }
+        
+        // Show dashboard
+        function showDashboard() {
+            loginPage.style.display = 'none';
+            dashboardContainer.style.display = 'block';
+            
+            // Update user avatar
+            if (currentUser && currentUser.email) {
+                userAvatar.textContent = currentUser.email.charAt(0).toUpperCase();
+            }
+            
+            renderApiList();
+            renderDatabaseList();
+            renderApiManagementList();
+            renderUserList();
+            renderSettings();
+            renderDatabaseOptions();
+        }
+        
+        // Render API list for dashboard
+        function renderApiList() {
+            const apiList = document.getElementById('apiList');
+            apiList.innerHTML = '';
+            
+            if (apis.length === 0) {
+                apiList.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No APIs found</p>';
+                return;
+            }
+            
+            apis.forEach(api => {
+                const apiItem = document.createElement('div');
+                apiItem.className = 'api-item';
+                apiItem.innerHTML = `
+                    <div class="api-info" data-api-id="${api.id}">
+                        <div class="api-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div>
+                            <div class="api-name">${api.name}</div>
+                            <div class="api-details">Last used: ${api.lastUsed}</div>
+                        </div>
+                    </div>
+                    <div class="api-actions">
+                        <div class="action-btn toggle-btn ${api.status === 'inactive' ? 'inactive' : ''}" title="Toggle API">
+                            <i class="fas fa-power-off"></i>
+                        </div>
+                        <div class="action-btn edit-btn" title="Edit API">
+                            <i class="fas fa-edit"></i>
+                        </div>
+                        <div class="action-btn delete-btn" title="Delete API">
+                            <i class="fas fa-trash"></i>
+                        </div>
+                    </div>
+                `;
+                apiList.appendChild(apiItem);
+            });
+        }
+        
+        // Render database list
+        function renderDatabaseList() {
+            const databaseList = document.getElementById('databaseList');
+            databaseList.innerHTML = '';
+            
+            if (databases.length === 0) {
+                databaseList.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No databases found</p>';
+                return;
+            }
+            
+            databases.forEach(db => {
+                const dbItem = document.createElement('div');
+                dbItem.className = 'database-item';
+                dbItem.innerHTML = `
+                    <div class="database-info">
+                        <div class="database-icon">
+                            <i class="fas fa-database"></i>
+                        </div>
+                        <div>
+                            <div class="database-name">${db.name}</div>
+                            <div class="database-details">Type: ${db.type} | Uploaded: ${db.uploadDate} | Status: <span class="status ${db.status}">${db.status}</span></div>
+                        </div>
+                    </div>
+                    <div class="database-actions">
+                        <div class="action-btn download-btn" title="Download Database" data-db-id="${db.id}">
+                            <i class="fas fa-download"></i>
+                        </div>
+                        <div class="action-btn delete-btn" title="Delete Database">
+                            <i class="fas fa-trash"></i>
+                        </div>
+                    </div>
+                `;
+                databaseList.appendChild(dbItem);
+            });
+        }
+        
+        // Render API list for API management page
+        function renderApiManagementList() {
+            const apiManagementList = document.getElementById('apiManagementList');
+            apiManagementList.innerHTML = '';
+            
+            if (apis.length === 0) {
+                apiManagementList.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No APIs found</p>';
+                return;
+            }
+            
+            apis.forEach(api => {
+                const apiItem = document.createElement('div');
+                apiItem.className = 'api-item';
+                apiItem.innerHTML = `
+                    <div class="api-info" data-api-id="${api.id}">
+                        <div class="api-icon">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <div>
+                            <div class="api-name">${api.name}</div>
+                            <div class="api-details">Database: ${api.database} | Last used: ${api.lastUsed}</div>
+                            <div class="api-link">
+                                https://api.quantumdb.com${api.endpoint}
+                                <button class="copy-link-btn" data-link="https://api.quantumdb.com${api.endpoint}">
+                                    <i class="fas fa-copy"></i> Copy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="api-actions">
+                        <div class="action-btn toggle-btn ${api.status === 'inactive' ? 'inactive' : ''}" title="Toggle API">
+                            <i class="fas fa-power-off"></i>
+                        </div>
+                        <div class="action-btn edit-btn" title="Edit API">
+                            <i class="fas fa-edit"></i>
+                        </div>
+                        <div class="action-btn delete-btn" title="Delete API">
+                            <i class="fas fa-trash"></i>
+                        </div>
+                    </div>
+                `;
+                apiManagementList.appendChild(apiItem);
+            });
+        }
+        
+        // Render user list
+        function renderUserList() {
+            const userList = document.getElementById('userList');
+            userList.innerHTML = '';
+            
+            if (users.length === 0) {
+                userList.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No users found</p>';
+                return;
+            }
+            
+            users.forEach(user => {
+                const userItem = document.createElement('div');
+                userItem.className = 'user-item';
+                userItem.innerHTML = `
+                    <div class="user-info" data-user-id="${user.id}">
+                        <div class="user-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <div class="user-name">${user.name} <span class="status ${user.status}">${user.status}</span></div>
+                            <div class="user-details">${user.email} | Role: ${user.role} | Joined: ${user.joinDate} | Last active: ${user.lastActive} | API: ${user.apiUsage}</div>
+                        </div>
+                    </div>
+                    <div class="user-actions">
+                        <div class="user-status-toggle">
+                            <div class="toggle-indicator ${user.status === 'active' ? 'active' : 'blocked'}" data-user-id="${user.id}">
+                                ${user.status === 'active' ? '✅' : '🚫'}
+                            </div>
+                        </div>
+                        <div class="action-btn delete-btn" title="Delete User" data-user-id="${user.id}">
+                            <i class="fas fa-trash"></i>
+                        </div>
+                    </div>
+                `;
+                userList.appendChild(userItem);
+            });
+        }
+        
+        // Render settings
+        function renderSettings() {
+            const settingsList = document.getElementById('settingsList');
+            settingsList.innerHTML = '';
+            
+            settings.forEach(setting => {
+                const settingItem = document.createElement('div');
+                settingItem.className = 'setting-option';
+                settingItem.innerHTML = `
+                    <div class="setting-info">
+                        <div class="setting-name">${setting.name}</div>
+                        <div class="setting-description">${setting.description}</div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" ${setting.enabled ? 'checked' : ''} data-setting-id="${setting.id}">
+                        <span class="toggle-slider"></span>
+                    </label>
+                `;
+                settingsList.appendChild(settingItem);
+            });
+        }
+        
+        // Render database options for API creation
+        function renderDatabaseOptions() {
+            const databaseSelect = document.getElementById('databaseSelect');
+            databaseSelect.innerHTML = '';
+            
+            databases.forEach(db => {
+                const dbOption = document.createElement('div');
+                dbOption.className = 'database-option';
+                dbOption.setAttribute('data-db-id', db.id);
+                dbOption.innerHTML = `
+                    <h4>${db.name}</h4>
+                    <p>${db.type} | ${db.size}</p>
+                `;
+                databaseSelect.appendChild(dbOption);
+            });
+        }
+        
+        // Show notification
+        function showNotification(message, type = 'success') {
+            notification.textContent = message;
+            notification.className = 'notification show';
+            if (type !== 'success') {
+                notification.classList.add(type);
+            }
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Login form
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('login-username').value;
+                const password = document.getElementById('login-password').value;
+                
+                // For demo purposes, using hardcoded credentials
+                // In a real app, you would verify against Firebase
+                if (username === 'admin' && password === 'password') {
+                    // Simulate Firebase authentication
+                    auth.signInWithEmailAndPassword('admin@quantumdb.com', 'password')
+                        .then((userCredential) => {
+                            currentUser = userCredential.user;
+                            showDashboard();
+                            showNotification('Login successful!');
+                        })
+                        .catch((error) => {
+                            // If Firebase auth fails, use demo login
+                            currentUser = { email: 'admin@quantumdb.com' };
+                            showDashboard();
+                            showNotification('Login successful!');
+                        });
+                } else {
+                    loginError.style.display = 'block';
+                }
+            });
+            
+            // Menu button
+            document.getElementById('menuBtn').addEventListener('click', function() {
+                sidebar.classList.add('open');
+                overlay.classList.add('show');
+            });
+            
+            // Sidebar close
+            document.getElementById('sidebarClose').addEventListener('click', function() {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('show');
+            });
+            
+            // Sidebar menu items
+            document.querySelectorAll('.sidebar-menu li').forEach(item => {
+                item.addEventListener('click', function() {
+                    const page = this.getAttribute('data-page');
+                    if (page === 'logout') {
+                        switchPage('logout');
+                    } else {
+                        switchPage(page);
+                    }
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('show');
+                });
+            });
+            
+            // Overlay click
+            overlay.addEventListener('click', function() {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('show');
+                closeAllModals();
+            });
+            
+            // Tab functionality
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Filter APIs based on selected tab
+                    const tabType = this.getAttribute('data-tab');
+                    filterApis(tabType);
+                });
+            });
+            
+            // Bottom navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const page = this.getAttribute('data-page');
+                    switchPage(page);
+                });
+            });
+            
+            // Create API button (dashboard)
+            document.getElementById('createApiBtn').addEventListener('click', function() {
+                createApiModal.style.display = 'flex';
+                overlay.classList.add('show');
+            });
+            
+            // Create API from database button (API management page)
+            document.getElementById('createApiFromDbBtn').addEventListener('click', function() {
+                createApiFromDbModal.style.display = 'flex';
+                overlay.classList.add('show');
+            });
+            
+            // Upload database button
+            document.getElementById('uploadDbBtn').addEventListener('click', function() {
+                uploadDbModal.style.display = 'flex';
+                overlay.classList.add('show');
+            });
+            
+            // Add user button
+            document.getElementById('addUserBtn').addEventListener('click', function() {
+                addUserModal.style.display = 'flex';
+                overlay.classList.add('show');
+            });
+            
+            // Database selection for API creation
+            document.getElementById('databaseSelect').addEventListener('click', function(e) {
+                const dbOption = e.target.closest('.database-option');
+                if (dbOption) {
+                    document.querySelectorAll('.database-option').forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    dbOption.classList.add('selected');
+                    
+                    const dbId = dbOption.getAttribute('data-db-id');
+                    const db = databases.find(d => d.id == dbId);
+                    if (db) {
+                        document.getElementById('apiEndpointFromDb').value = `/api/v1/${db.name.toLowerCase().replace(/\s+/g, '-')}`;
+                    }
+                }
+            });
+            
+            // File upload info
+            document.getElementById('dbFile').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+                    document.getElementById('fileUploadInfo').textContent = `Selected file: ${file.name} (${fileSize} MB)`;
+                } else {
+                    document.getElementById('fileUploadInfo').textContent = 'Select a database file to upload';
+                }
+            });
+            
+            // Close create modal
+            document.getElementById('closeCreateModal').addEventListener('click', closeCreateModal);
+            document.getElementById('cancelCreateBtn').addEventListener('click', closeCreateModal);
+            
+            // Close create from DB modal
+            document.getElementById('closeCreateDbModal').addEventListener('click', closeCreateFromDbModal);
+            document.getElementById('cancelCreateDbBtn').addEventListener('click', closeCreateFromDbModal);
+            
+            // Close upload modal
+            document.getElementById('closeUploadModal').addEventListener('click', closeUploadModal);
+            document.getElementById('cancelUploadBtn').addEventListener('click', closeUploadModal);
+            
+            // Close add user modal
+            document.getElementById('closeAddUserModal').addEventListener('click', closeAddUserModal);
+            document.getElementById('cancelAddUserBtn').addEventListener('click', closeAddUserModal);
+            
+            // Generate API button (dashboard)
+            document.getElementById('generateApiBtn').addEventListener('click', function() {
+                const apiName = document.getElementById('apiName').value;
+                const apiEndpoint = document.getElementById('apiEndpoint').value;
+                const apiDescription = document.getElementById('apiDescription').value;
+                
+                if (!apiName || !apiEndpoint) {
+                    showNotification('Please fill in all required fields', 'error');
+                    return;
+                }
+                
+                // Create new API
+                const newApi = {
+                    id: apis.length + 1,
+                    name: apiName,
+                    endpoint: apiEndpoint,
+                    description: apiDescription,
+                    status: 'active',
+                    created: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                    lastUsed: 'Just now',
+                    key: 'qdb_' + Math.random().toString(36).substring(2, 18),
+                    database: 'Custom Database'
+                };
+                
+                apis.unshift(newApi);
+                renderApiList();
+                renderApiManagementList();
+                closeCreateModal();
+                showNotification(`API "${apiName}" created successfully!`);
+            });
+            
+            // Generate API from database button
+            document.getElementById('generateApiFromDbBtn').addEventListener('click', function() {
+                const apiName = document.getElementById('apiNameFromDb').value;
+                const apiEndpoint = document.getElementById('apiEndpointFromDb').value;
+                const selectedDb = document.querySelector('.database-option.selected');
+                
+                if (!apiName || !apiEndpoint || !selectedDb) {
+                    showNotification('Please fill in all required fields and select a database', 'error');
+                    return;
+                }
+                
+                const dbId = selectedDb.getAttribute('data-db-id');
+                const db = databases.find(d => d.id == dbId);
+                
+                // Create new API
+                const newApi = {
+                    id: apis.length + 1,
+                    name: apiName,
+                    endpoint: apiEndpoint,
+                    description: `API for ${db.name} database`,
+                    status: 'active',
+                    created: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                    lastUsed: 'Just now',
+                    key: 'qdb_' + Math.random().toString(36).substring(2, 18),
+                    database: db.name
+                };
+                
+                apis.unshift(newApi);
+                renderApiList();
+                renderApiManagementList();
+                closeCreateFromDbModal();
+                showNotification(`API "${apiName}" created successfully for ${db.name}!`);
+            });
+            
+            // Upload database file button
+            document.getElementById('uploadDbFileBtn').addEventListener('click', function() {
+                const dbName = document.getElementById('dbName').value;
+                const dbType = document.getElementById('dbType').value;
+                const dbFile = document.getElementById('dbFile').files[0];
+                
+                if (!dbName || !dbFile) {
+                    showNotification('Please fill in all required fields', 'error');
+                    return;
+                }
+                
+                // Show upload progress
+                const progressBar = document.getElementById('uploadProgress');
+                progressBar.style.width = '0%';
+                
+                // Simulate file upload with progress
+                let progress = 0;
+                const uploadInterval = setInterval(() => {
+                    progress += 5;
+                    progressBar.style.width = `${progress}%`;
+                    
+                    if (progress >= 100) {
+                        clearInterval(uploadInterval);
+                        
+                        // Create new database entry
+                        const fileSize = (dbFile.size / (1024 * 1024 * 1024)).toFixed(1);
+                        const newDb = {
+                            id: databases.length + 1,
+                            name: dbName,
+                            size: `${fileSize} GB`,
+                            type: dbType,
+                            status: 'active',
+                            uploadDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                            fileUrl: URL.createObjectURL(dbFile) // For demo purposes
+                        };
+                        
+                        databases.unshift(newDb);
+                        renderDatabaseList();
+                        renderDatabaseOptions();
+                        closeUploadModal();
+                        showNotification(`Database "${dbName}" uploaded successfully!`);
+                        
+                        // Simulate data usage deduction
+                        showNotification(`Data usage: ${fileSize} GB deducted from your account`, 'warning');
+                    }
+                }, 100);
+            });
+            
+            // Save user button
+            document.getElementById('saveUserBtn').addEventListener('click', function() {
+                const userName = document.getElementById('newUserName').value;
+                const userEmail = document.getElementById('newUserEmail').value;
+                const userRole = document.getElementById('newUserRole').value;
+                
+                if (!userName || !userEmail) {
+                    showNotification('Please fill in all required fields', 'error');
+                    return;
+                }
+                
+                // Create new user
+                const newUser = {
+                    id: users.length + 1,
+                    name: userName,
+                    email: userEmail,
+                    status: 'active',
+                    joinDate: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+                    lastActive: 'Just now',
+                    apiUsage: 'No API assigned yet',
+                    role: userRole
+                };
+                
+                users.unshift(newUser);
+                renderUserList();
+                closeAddUserModal();
+                showNotification(`User "${userName}" added successfully!`);
+            });
+            
+            // Refresh chart button
+            document.getElementById('refreshChartBtn').addEventListener('click', function() {
+                // Update chart with random data for demo
+                storageChart.data.datasets[0].data = [
+                    Math.floor(Math.random() * 30) + 20,
+                    Math.floor(Math.random() * 20) + 10,
+                    Math.floor(Math.random() * 50) + 30,
+                    Math.floor(Math.random() * 10) + 5,
+                    Math.floor(Math.random() * 10) + 5
+                ];
+                storageChart.update();
+                showNotification('Storage chart updated!');
+            });
+            
+            // Export users button
+            document.getElementById('exportUsersBtn').addEventListener('click', function() {
+                showNotification('User data exported successfully!');
+            });
+            
+            // Quick action buttons
+            document.getElementById('backupBtn').addEventListener('click', function() {
+                showNotification('Database backup initiated...', 'warning');
+                // Simulate backup process
+                setTimeout(() => {
+                    showNotification('Backup completed successfully!');
+                }, 2000);
+            });
+            
+            document.getElementById('optimizeBtn').addEventListener('click', function() {
+                showNotification('Database optimization in progress...', 'warning');
+                // Simulate optimization process
+                setTimeout(() => {
+                    showNotification('Database optimized successfully!');
+                }, 3000);
+            });
+            
+            document.getElementById('clearLogsBtn').addEventListener('click', function() {
+                if (confirm('Are you sure you want to clear all logs? This action cannot be undone.')) {
+                    showNotification('Logs cleared successfully!');
+                }
+            });
+            
+            // Save settings button
+            document.getElementById('saveSettingsBtn').addEventListener('click', function() {
+                showNotification('Settings saved successfully!');
+            });
+            
+            // Reset settings button
+            document.getElementById('resetSettingsBtn').addEventListener('click', function() {
+                if (confirm('Are you sure you want to reset all settings to default?')) {
+                    showNotification('Settings reset to default!');
+                }
+            });
+            
+            // Confirm logout button
+            document.getElementById('confirmLogoutBtn').addEventListener('click', function() {
+                auth.signOut().then(() => {
+                    showNotification('You have been logged out successfully!');
+                    setTimeout(() => {
+                        showLogin();
+                        switchPage('dashboard');
+                    }, 1500);
+                });
+            });
+            
+            // Cancel logout button
+            document.getElementById('cancelLogoutBtn').addEventListener('click', function() {
+                switchPage('dashboard');
+            });
+            
+            // Floating action button
+            document.getElementById('quickActionBtn').addEventListener('click', function() {
+                createApiModal.style.display = 'flex';
+                overlay.classList.add('show');
+            });
+            
+            // Setup API item event listeners (delegation)
+            document.getElementById('apiList').addEventListener('click', function(e) {
+                const apiItem = e.target.closest('.api-item');
+                if (!apiItem) return;
+                
+                const apiId = parseInt(apiItem.querySelector('.api-info').getAttribute('data-api-id'));
+                const api = apis.find(a => a.id === apiId);
+                
+                // Toggle button
+                if (e.target.closest('.toggle-btn')) {
+                    toggleApiStatus(api);
+                }
+                
+                // Edit button
+                if (e.target.closest('.edit-btn')) {
+                    openEditModal(api);
+                }
+                
+                // Delete button
+                if (e.target.closest('.delete-btn')) {
+                    openDeleteModal(api);
+                }
+                
+                // API info click (show details)
+                if (e.target.closest('.api-info')) {
+                    openApiDetails(api);
+                }
+            });
+            
+            // Setup API management item event listeners (delegation)
+            document.getElementById('apiManagementList').addEventListener('click', function(e) {
+                const apiItem = e.target.closest('.api-item');
+                if (!apiItem) return;
+                
+                const apiId = parseInt(apiItem.querySelector('.api-info').getAttribute('data-api-id'));
+                const api = apis.find(a => a.id === apiId);
+                
+                // Toggle button
+                if (e.target.closest('.toggle-btn')) {
+                    toggleApiStatus(api);
+                }
+                
+                // Edit button
+                if (e.target.closest('.edit-btn')) {
+                    openEditModal(api);
+                }
+                
+                // Delete button
+                if (e.target.closest('.delete-btn')) {
+                    openDeleteModal(api);
+                }
+                
+                // Copy link button
+                if (e.target.closest('.copy-link-btn')) {
+                    const link = e.target.closest('.copy-link-btn').getAttribute('data-link');
+                    navigator.clipboard.writeText(link).then(() => {
+                        showNotification('API link copied to clipboard!');
+                    });
+                }
+            });
+            
+            // Setup database item event listeners (delegation)
+            document.getElementById('databaseList').addEventListener('click', function(e) {
+                const dbItem = e.target.closest('.database-item');
+                if (!dbItem) return;
+                
+                // Download button
+                if (e.target.closest('.download-btn')) {
+                    const dbId = e.target.closest('.download-btn').getAttribute('data-db-id');
+                    const db = databases.find(d => d.id == dbId);
+                    
+                    if (db) {
+                        // Create a dummy file for download
+                        const fileSize = parseFloat(db.size);
+                        const dummySize = Math.floor(fileSize * 1024 * 1024); // Convert to bytes
+                        const dummyData = new Array(dummySize).fill(0).map(() => Math.floor(Math.random() * 256));
+                        const blob = new Blob([new Uint8Array(dummyData)], { type: 'application/octet-stream' });
+                        
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${db.name.replace(/\s+/g, '_')}.db`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        
+                        showNotification(`Downloading ${db.name} (${db.size})...`);
+                    }
+                }
+                
+                // Delete button
+                if (e.target.closest('.delete-btn')) {
+                    if (confirm('Are you sure you want to delete this database? This action cannot be undone.')) {
+                        showNotification('Database deleted successfully!');
+                    }
+                }
+            });
+            
+            // Setup user item event listeners (delegation)
+            document.getElementById('userList').addEventListener('click', function(e) {
+                const userItem = e.target.closest('.user-item');
+                if (!userItem) return;
+                
+                // Block/Unblock toggle
+                if (e.target.closest('.toggle-indicator')) {
+                    const userId = parseInt(e.target.closest('.toggle-indicator').getAttribute('data-user-id'));
+                    const user = users.find(u => u.id === userId);
+                    
+                    if (user) {
+                        if (user.status === 'active') {
+                            openBlockUserModal(user);
+                        } else {
+                            openUnblockUserModal(user);
+                        }
+                    }
+                }
+                
+                // Delete button
+                if (e.target.closest('.delete-btn')) {
+                    const userId = parseInt(e.target.closest('.delete-btn').getAttribute('data-user-id'));
+                    const user = users.find(u => u.id === userId);
+                    openDeleteUserModal(user);
+                }
+            });
+            
+            // Setup settings toggles
+            document.getElementById('settingsList').addEventListener('change', function(e) {
+                if (e.target.type === 'checkbox') {
+                    const settingId = parseInt(e.target.getAttribute('data-setting-id'));
+                    const setting = settings.find(s => s.id === settingId);
+                    
+                    if (setting) {
+                        setting.enabled = e.target.checked;
+                        showNotification(`${setting.name} ${setting.enabled ? 'enabled' : 'disabled'}`);
+                    }
+                }
+            });
+            
+            // Delete API modal
+            document.getElementById('closeDeleteModal').addEventListener('click', closeDeleteModal);
+            document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteModal);
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+                const apiName = document.getElementById('apiToDelete').textContent;
+                const apiId = parseInt(this.getAttribute('data-api-id'));
+                
+                // Remove API from list
+                apis = apis.filter(api => api.id !== apiId);
+                renderApiList();
+                renderApiManagementList();
+                closeDeleteModal();
+                showNotification(`API "${apiName}" deleted successfully`);
+            });
+            
+            // Edit API modal
+            document.getElementById('closeEditModal').addEventListener('click', closeEditModal);
+            document.getElementById('cancelEditBtn').addEventListener('click', closeEditModal);
+            document.getElementById('saveApiBtn').addEventListener('click', function() {
+                const apiId = parseInt(this.getAttribute('data-api-id'));
+                const apiIndex = apis.findIndex(api => api.id === apiId);
+                
+                if (apiIndex !== -1) {
+                    apis[apiIndex].name = document.getElementById('editApiName').value;
+                    apis[apiIndex].endpoint = document.getElementById('editApiEndpoint').value;
+                    apis[apiIndex].description = document.getElementById('editApiDescription').value;
+                    
+                    renderApiList();
+                    renderApiManagementList();
+                    closeEditModal();
+                    showNotification('API updated successfully!');
+                }
+            });
+            
+            // API Details modal
+            document.getElementById('closeDetailsModal').addEventListener('click', closeApiDetails);
+            document.getElementById('closeDetailsBtn').addEventListener('click', closeApiDetails);
+            document.getElementById('copyApiKeyBtn').addEventListener('click', function() {
+                const apiKey = document.getElementById('apiKeyDisplay').textContent;
+                navigator.clipboard.writeText(apiKey).then(() => {
+                    showNotification('API key copied to clipboard!');
+                });
+            });
+            document.getElementById('regenerateApiKeyBtn').addEventListener('click', function() {
+                const apiId = parseInt(this.getAttribute('data-api-id'));
+                const apiIndex = apis.findIndex(api => api.id === apiId);
+                
+                if (apiIndex !== -1) {
+                    const newKey = 'qdb_' + Math.random().toString(36).substring(2, 18);
+                    apis[apiIndex].key = newKey;
+                    document.getElementById('apiKeyDisplay').textContent = newKey;
+                    showNotification('API key regenerated successfully!');
+                }
+            });
+            
+            // Block User modal
+            document.getElementById('closeBlockModal').addEventListener('click', closeBlockModal);
+            document.getElementById('cancelBlockBtn').addEventListener('click', closeBlockModal);
+            document.getElementById('confirmBlockBtn').addEventListener('click', function() {
+                const userName = document.getElementById('userToBlock').textContent;
+                const userId = parseInt(this.getAttribute('data-user-id'));
+                const userIndex = users.findIndex(user => user.id === userId);
+                
+                if (userIndex !== -1) {
+                    users[userIndex].status = 'blocked';
+                    renderUserList();
+                    closeBlockModal();
+                    showNotification(`User "${userName}" blocked successfully`);
+                }
+            });
+            
+            // Unblock User modal
+            document.getElementById('closeUnblockModal').addEventListener('click', closeUnblockModal);
+            document.getElementById('cancelUnblockBtn').addEventListener('click', closeUnblockModal);
+            document.getElementById('confirmUnblockBtn').addEventListener('click', function() {
+                const userName = document.getElementById('userToUnblock').textContent;
+                const userId = parseInt(this.getAttribute('data-user-id'));
+                const userIndex = users.findIndex(user => user.id === userId);
+                
+                if (userIndex !== -1) {
+                    users[userIndex].status = 'active';
+                    renderUserList();
+                    closeUnblockModal();
+                    showNotification(`User "${userName}" unblocked successfully`);
+                }
+            });
+            
+            // Delete User modal
+            document.getElementById('closeDeleteUserModal').addEventListener('click', closeDeleteUserModal);
+            document.getElementById('cancelDeleteUserBtn').addEventListener('click', closeDeleteUserModal);
+            document.getElementById('confirmDeleteUserBtn').addEventListener('click', function() {
+                const userName = document.getElementById('userToDelete').textContent;
+                const userId = parseInt(this.getAttribute('data-user-id'));
+                
+                // Remove user from list
+                users = users.filter(user => user.id !== userId);
+                renderUserList();
+                closeDeleteUserModal();
+                showNotification(`User "${userName}" deleted successfully`);
+            });
+        }
+        
+        // Switch between pages
+        function switchPage(page) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => {
+                p.classList.remove('active');
+            });
+            
+            // Show selected page
+            document.getElementById(`${page}-page`).classList.add('active');
+            
+            // Update bottom navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('data-page') === page) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Update floating button visibility
+            const floatingBtn = document.getElementById('quickActionBtn');
+            if (page === 'dashboard' || page === 'api-management') {
+                floatingBtn.style.display = 'flex';
+            } else {
+                floatingBtn.style.display = 'none';
+            }
+        }
+        
+        // Filter APIs based on tab selection
+        function filterApis(filter) {
+            const apiItems = document.querySelectorAll('.api-item');
+            
+            apiItems.forEach(item => {
+                const apiId = parseInt(item.querySelector('.api-info').getAttribute('data-api-id'));
+                const api = apis.find(a => a.id === apiId);
+                
+                if (filter === 'all') {
+                    item.style.display = 'flex';
+                } else if (filter === 'active' && api.status === 'active') {
+                    item.style.display = 'flex';
+                } else if (filter === 'inactive' && api.status === 'inactive') {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+        
+        // Toggle API status
+        function toggleApiStatus(api) {
+            api.status = api.status === 'active' ? 'inactive' : 'active';
+            renderApiList();
+            renderApiManagementList();
+            showNotification(`API "${api.name}" is now ${api.status}`);
+        }
+        
+        // Open edit modal
+        function openEditModal(api) {
+            document.getElementById('editApiName').value = api.name;
+            document.getElementById('editApiEndpoint').value = api.endpoint;
+            document.getElementById('editApiDescription').value = api.description;
+            document.getElementById('saveApiBtn').setAttribute('data-api-id', api.id);
+            
+            editApiModal.style.display = 'flex';
+            overlay.classList.add('show');
+        }
+        
+        // Open delete modal
+        function openDeleteModal(api) {
+            document.getElementById('apiToDelete').textContent = api.name;
+            document.getElementById('confirmDeleteBtn').setAttribute('data-api-id', api.id);
+            
+            deleteApiModal.style.display = 'flex';
+            overlay.classList.add('show');
+        }
+        
+        // Open block user modal
+        function openBlockUserModal(user) {
+            document.getElementById('userToBlock').textContent = user.name;
+            document.getElementById('confirmBlockBtn').setAttribute('data-user-id', user.id);
+            
+            blockUserModal.style.display = 'flex';
+            overlay.classList.add('show');
+        }
+        
+        // Open unblock user modal
+        function openUnblockUserModal(user) {
+            document.getElementById('userToUnblock').textContent = user.name;
+            document.getElementById('confirmUnblockBtn').setAttribute('data-user-id', user.id);
+            
+            unblockUserModal.style.display = 'flex';
+            overlay.classList.add('show');
+        }
+        
+        // Open delete user modal
+        function openDeleteUserModal(user) {
+            document.getElementById('userToDelete').textContent = user.name;
+            document.getElementById('confirmDeleteUserBtn').setAttribute('data-user-id', user.id);
+            
+            deleteUserModal.style.display = 'flex';
+            overlay.classList.add('show');
+        }
+        
+        // Open API details
+        function openApiDetails(api) {
+            document.getElementById('apiDetailsTitle').textContent = api.name;
+            document.getElementById('apiKeyDisplay').textContent = api.key;
+            document.getElementById('apiStatusDisplay').textContent = api.status.charAt(0).toUpperCase() + api.status.slice(1);
+            document.getElementById('apiStatusDisplay').className = `status ${api.status}`;
+            document.getElementById('apiCreatedDisplay').textContent = api.created;
+            document.getElementById('apiLastUsedDisplay').textContent = api.lastUsed;
+            document.getElementById('regenerateApiKeyBtn').setAttribute('data-api-id', api.id);
+            
+            apiDetailsModal.style.display = 'flex';
+            overlay.classList.add('show');
+        }
+        
+        // Close modals
+        function closeCreateModal() {
+            createApiModal.style.display = 'none';
+            overlay.classList.remove('show');
+            document.getElementById('apiName').value = '';
+            document.getElementById('apiEndpoint').value = '';
+            document.getElementById('apiDescription').value = '';
+        }
+        
+        function closeCreateFromDbModal() {
+            createApiFromDbModal.style.display = 'none';
+            overlay.classList.remove('show');
+            document.getElementById('apiNameFromDb').value = '';
+            document.getElementById('apiEndpointFromDb').value = '';
+            document.querySelectorAll('.database-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+        }
+        
+        function closeUploadModal() {
+            uploadDbModal.style.display = 'none';
+            overlay.classList.remove('show');
+            document.getElementById('dbName').value = '';
+            document.getElementById('dbFile').value = '';
+            document.getElementById('fileUploadInfo').textContent = 'Select a database file to upload';
+            document.getElementById('uploadProgress').style.width = '0%';
+        }
+        
+        function closeAddUserModal() {
+            addUserModal.style.display = 'none';
+            overlay.classList.remove('show');
+            document.getElementById('newUserName').value = '';
+            document.getElementById('newUserEmail').value = '';
+        }
+        
+        function closeDeleteModal() {
+            deleteApiModal.style.display = 'none';
+            overlay.classList.remove('show');
+        }
+        
+        function closeEditModal() {
+            editApiModal.style.display = 'none';
+            overlay.classList.remove('show');
+        }
+        
+        function closeApiDetails() {
+            apiDetailsModal.style.display = 'none';
+            overlay.classList.remove('show');
+        }
+        
+        function closeBlockModal() {
+            blockUserModal.style.display = 'none';
+            overlay.classList.remove('show');
+        }
+        
+        function closeUnblockModal() {
+            unblockUserModal.style.display = 'none';
+            overlay.classList.remove('show');
+        }
+        
+        function closeDeleteUserModal() {
+            deleteUserModal.style.display = 'none';
+            overlay.classList.remove('show');
+        }
+        
+        function closeAllModals() {
+            closeCreateModal();
+            closeCreateFromDbModal();
+            closeUploadModal();
+            closeAddUserModal();
+            closeDeleteModal();
+            closeEditModal();
+            closeApiDetails();
+            closeBlockModal();
+            closeUnblockModal();
+            closeDeleteUserModal();
+        }
+        
+        // Initialize the app
+        initApp();
+    </script>
+</body>
+</html>
